@@ -57,8 +57,6 @@ After model training:
 
 🔍 Understand how the trained model interprets structural information
 
-⚠️ Currently only predicted class is shown (no ground-truth comparison)
-
 🔎 Node Search & Neighborhood Exploration
 Deep dive into the graph:
 
