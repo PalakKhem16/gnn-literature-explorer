@@ -1,58 +1,78 @@
 📚 GNN Literature Explorer
-An interactive Streamlit web application to explore Graph Neural Networks (GNNs) on academic citation networks like Cora, Citeseer, and PubMed.
+GNN Literature Explorer is an interactive Streamlit web application for exploring Graph Neural Networks (GNNs) on academic citation networks such as Cora, Citeseer, and PubMed. It provides dataset visualizations, GNN model training, and graph-based insights — all in one unified interface.
 
 🚀 Features
 🧠 GNN Model Training
-Select and train different GNN architectures:
+Train and compare different GNN architectures:
 
-GCN (Graph Convolutional Network)
+✅ GCN (Graph Convolutional Network)
 
-GAT (Graph Attention Network)
+✅ GAT (Graph Attention Network)
 
-GraphSAGE
+✅ GraphSAGE
 
-Customize:
+Customizable parameters:
 
-Number of epochs
+🔧 Number of epochs
 
-Learning rate
+🔧 Learning rate
 
-Hidden layer size
+🔧 Hidden layer size
 
-Real-time training feedback with accuracy curves:
+📈 Training Feedback
 
-Train accuracy
+Real-time accuracy plots:
 
-Validation accuracy
+Train Accuracy
 
-Test accuracy
+Validation Accuracy
+
+Test Accuracy
 
 📊 Dataset Visualization
-Choose from academic graph datasets: Cora, Citeseer, and PubMed
+Explore built-in academic citation datasets:
 
-View:
+📚 Cora
 
-Node and edge counts
+📚 Citeseer
 
-Node feature dimensions
+📚 PubMed
 
-Class distribution
+Visualized information:
 
-Sample feature vectors
+📌 Node & edge counts
 
-Visualize a subgraph (first 20 nodes) of the citation network
+📌 Feature dimensions per node
+
+📌 Class label distribution
+
+📌 Sample node features
+
+🕸️ Citation subgraph visualization (first 20 nodes)
 
 🌐 Predicted Class Visualization
-After training, view a graph with nodes colored by their predicted class
+After model training:
 
-Helps understand how the model interprets the citation graph structure
+🟡 Visualize the graph with nodes colored by predicted class
 
+🔍 Understand how the trained model interprets structural information
+
+⚠️ Currently only predicted class is shown (no ground-truth comparison)
 
 🔎 Node Search & Neighborhood Exploration
-Search for a node by ID
+Deep dive into the graph:
 
-Set a neighborhood radius
+🔢 Search a node by its Node ID
 
-Explore how the selected node connects with its neighbors
+🌐 Set neighborhood depth (k-hop) to explore local structure
 
-Visualize the local subgraph with predicted class coloring
+🎨 Visualize node and its neighbors with predicted class coloring
+
+🛠️ Tech Stack
+Python
+
+Streamlit (for UI)
+
+PyTorch Geometric (for GNNs)
+
+NetworkX, Matplotlib, PyVis (for graph visualization)
