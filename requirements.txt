@@ -1,0 +1,9 @@
+torch
+torch_geometric
+streamlit
+scikit-learn
+pandas
+matplotlib
+pyvis
+networkx
+plotly
