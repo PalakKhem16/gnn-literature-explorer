@@ -7,3 +7,4 @@ matplotlib
 pyvis
 networkx
 plotly
+seaborn
