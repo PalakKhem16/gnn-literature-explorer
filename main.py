@@ -4,6 +4,8 @@ import networkx as nx
 import torch
 import torch.optim as optim
 from torch_geometric.utils import to_networkx
+from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score
+import seaborn as sns
 
 from utils.dataset_loader import load_dataset
 from models.gcn import GCN
@@ -12,7 +14,6 @@ from models.graphsage import GraphSAGE
 from utils.trainer import train_model
 from components.graph_viz import visualize_graph
 from components.search_and_expand import search_and_expand
-
 
 @st.cache_data
 def get_graph(_data):
@@ -51,15 +52,6 @@ def dataset_visualization(dataset, data):
 def model_training(dataset, data):
     st.header("🧠 Train a GNN Model")
 
-    # Detect dataset change and clear training-related session state
-    current_dataset_name = dataset.__class__.__name__ if hasattr(dataset, '__class__') else str(dataset)
-    prev_dataset_name = st.session_state.get('prev_dataset_name', None)
-    if prev_dataset_name != current_dataset_name:
-        for key in ['train_accs', 'val_accs', 'test_accs', 'logits', 'trained']:
-            if key in st.session_state:
-                del st.session_state[key]
-        st.session_state['prev_dataset_name'] = current_dataset_name
-
     with st.form("train_form"):
         model_name = st.selectbox("Model Type", ["GCN", "GAT", "GraphSAGE"])
         epochs = st.slider("Epochs", 10, 300, 100)
@@ -67,8 +59,7 @@ def model_training(dataset, data):
         hidden_channels = st.number_input("Hidden Channels", min_value=2, max_value=256, value=16)
         submitted = st.form_submit_button("🚀 Start Training")
 
-    # Persist training state and results
-
+    # Use session_state to persist training results
     if submitted or st.session_state.get('trained', False):
         if submitted:
             if model_name == "GCN":
@@ -79,78 +70,74 @@ def model_training(dataset, data):
                 model = GraphSAGE(dataset.num_node_features, hidden_channels, dataset.num_classes)
 
             optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=5e-4)
-            with st.spinner("Training model..."):
-                train_accs, val_accs, test_accs = train_model(model, data, optimizer, epochs)
 
+            with st.spinner("Training model..."):
+                train_accs, val_accs, test_accs, f1_scores, roc_aucs, test_cm = train_model(model, data, optimizer, epochs)
+
+            model.eval()
+            logits = model(data)
+
+            # Save results to session_state
             st.session_state['train_accs'] = train_accs
             st.session_state['val_accs'] = val_accs
             st.session_state['test_accs'] = test_accs
-
-            st.subheader("📈 Accuracy over Epochs")
-            fig, ax = plt.subplots()
-            ax.plot(train_accs, label='Train')
-            ax.plot(val_accs, label='Validation')
-            ax.plot(test_accs, label='Test')
-            ax.set_xlabel("Epoch")
-            ax.set_ylabel("Accuracy")
-            ax.legend()
-            st.pyplot(fig)
-
-            st.success(f"✅ Final Test Accuracy: {test_accs[-1]*100:.2f}%")
-
-            # ...existing code...
-            model.eval()
-            with st.spinner("Generating predictions..."):
-                logits = model(data)
+            st.session_state['f1_scores'] = f1_scores
+            st.session_state['roc_aucs'] = roc_aucs
+            st.session_state['test_cm'] = test_cm
             st.session_state['logits'] = logits
             st.session_state['trained'] = True
 
-        # Use stored results for visualization
+        # Use cached results
         train_accs = st.session_state.get('train_accs')
         val_accs = st.session_state.get('val_accs')
         test_accs = st.session_state.get('test_accs')
+        f1_scores = st.session_state.get('f1_scores')
+        roc_aucs = st.session_state.get('roc_aucs')
+        test_cm = st.session_state.get('test_cm')
         logits = st.session_state.get('logits')
 
-        # ...existing code...
+        st.subheader("📈 Accuracy over Epochs")
+        fig, ax = plt.subplots()
+        ax.plot(train_accs, label='Train')
+        ax.plot(val_accs, label='Validation')
+        ax.plot(test_accs, label='Test')
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Accuracy")
+        ax.legend()
+        st.pyplot(fig)
 
-        # Predict and visualize
-        st.subheader("🌐 Graph Visualization (Predicted Classes)")
-        # Add class color legend
-        colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                  '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe']
-        st.markdown("#### Class Color Legend")
-        legend_html = ""
-        for i, color in enumerate(colors[:dataset.num_classes]):
-            legend_html += f"<span style='display:inline-block;width:20px;height:20px;background:{color};margin-right:8px;border-radius:4px;'></span> Class {i} &nbsp;&nbsp;"
-        st.markdown(legend_html, unsafe_allow_html=True)
+        st.success(f"✅ Final Test Accuracy: {test_accs[-1]*100:.2f}%")
 
+        st.subheader("📉 Confusion Matrix")
+        fig_cm, ax_cm = plt.subplots()
+        sns.heatmap(test_cm, annot=True, fmt="d", cmap="Blues", ax=ax_cm)
+        ax_cm.set_xlabel("Predicted")
+        ax_cm.set_ylabel("Actual")
+        st.pyplot(fig_cm)
+
+        st.subheader("📐 F1 Score ")
+        st.write(f"**F1 Score (Macro)**: `{f1_scores[-1]:.4f}`")
+
+        if dataset.num_classes == 2:
+            st.subheader("📊 ROC AUC Score")
+            st.write(f"**ROC AUC Score**: `{roc_aucs[-1]:.4f}`")
+
+        st.subheader("🌐 Predicted Class Visualization")
         visualize_graph(data, logits=logits)
 
-    # Node Search/Expansion (only after training)
-    if 'logits' in st.session_state:
-        st.subheader("🔎 Node Search & Neighborhood Exploration")
-        # Add class color legend for node search
-        colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                  '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe']
-        st.markdown("#### Class Color Legend")
-        legend_html = ""
-        for i, color in enumerate(colors[:dataset.num_classes]):
-            legend_html += f"<span style='display:inline-block;width:20px;height:20px;background:{color};margin-right:8px;border-radius:4px;'></span> Class {i} &nbsp;&nbsp;"
-        st.markdown(legend_html, unsafe_allow_html=True)
-        search_and_expand(data, logits=st.session_state['logits'])
+        st.subheader("🔍 Node Search & Neighborhood Exploration")
+        search_and_expand(data, logits=logits)
 
 def main():
     st.set_page_config(page_title="GNN Literature Explorer", layout="wide")
     st.title("📃 GNN Literature Explorer")
 
-    # Sidebar
     st.sidebar.title("🔍 Navigation")
     page = st.sidebar.radio("Go to", [
         "📊 Dataset Visualization",
         "🧠 Model Training"
     ])
 
-    # Dataset
     dataset_name = st.sidebar.selectbox("📂 Choose Dataset", ["Cora", "Citeseer", "PubMed"])
     dataset, data = load_dataset(dataset_name)
 
