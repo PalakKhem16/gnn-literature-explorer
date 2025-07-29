@@ -20,7 +20,7 @@ def get_graph(_data):
     return to_networkx(_data, to_undirected=True)
 
 def dataset_visualization(dataset, data):
-    st.header("📊 Dataset Overview")
+    st.header(" Dataset Overview")
 
     st.markdown(f"""
     - **Nodes**: {data.num_nodes}
@@ -29,17 +29,17 @@ def dataset_visualization(dataset, data):
     - **Classes**: {dataset.num_classes}
     """)
 
-    st.subheader("🎯 Label Distribution")
+    st.subheader("Label Distribution")
     fig1, ax1 = plt.subplots()
     ax1.hist(data.y.numpy(), bins=dataset.num_classes, color='skyblue', edgecolor='black')
     ax1.set_xlabel("Class Label")
     ax1.set_ylabel("Frequency")
     st.pyplot(fig1)
 
-    st.subheader("🧬 Sample Node Features")
+    st.subheader(" Sample Node Features")
     st.dataframe(data.x[:5].numpy())
 
-    st.subheader("🌐 Citation Graph (20-node Subgraph)")
+    st.subheader(" Citation Graph (20-node Subgraph)")
     with st.spinner("Rendering citation graph..."):
         G = get_graph(data)
         sub_nodes = list(G.nodes)[:20]
@@ -50,7 +50,7 @@ def dataset_visualization(dataset, data):
         plt.close(fig2)
 
 def model_training(dataset, data):
-    st.header("🧠 Train a GNN Model")
+    st.header("Train a GNN Model")
 
     with st.form("train_form"):
         model_name = st.selectbox("Model Type", ["GCN", "GAT", "GraphSAGE"])
@@ -106,44 +106,44 @@ def model_training(dataset, data):
         ax.legend()
         st.pyplot(fig)
 
-        st.success(f"✅ Final Test Accuracy: {test_accs[-1]*100:.2f}%")
+        st.success(f" Final Test Accuracy: {test_accs[-1]*100:.2f}%")
 
-        st.subheader("📉 Confusion Matrix")
+        st.subheader(" Confusion Matrix")
         fig_cm, ax_cm = plt.subplots()
         sns.heatmap(test_cm, annot=True, fmt="d", cmap="Blues", ax=ax_cm)
         ax_cm.set_xlabel("Predicted")
         ax_cm.set_ylabel("Actual")
         st.pyplot(fig_cm)
 
-        st.subheader("📐 F1 Score ")
+        st.subheader(" F1 Score ")
         st.write(f"**F1 Score (Macro)**: `{f1_scores[-1]:.4f}`")
 
         if dataset.num_classes == 2:
-            st.subheader("📊 ROC AUC Score")
+            st.subheader(" ROC AUC Score")
             st.write(f"**ROC AUC Score**: `{roc_aucs[-1]:.4f}`")
 
-        st.subheader("🌐 Predicted Class Visualization")
+        st.subheader(" Predicted Class Visualization")
         visualize_graph(data, logits=logits)
 
-        st.subheader("🔍 Node Search & Neighborhood Exploration")
+        st.subheader(" Node Search & Neighborhood Exploration")
         search_and_expand(data, logits=logits)
 
 def main():
     st.set_page_config(page_title="GNN Literature Explorer", layout="wide")
     st.title("📃 GNN Literature Explorer")
 
-    st.sidebar.title("🔍 Navigation")
+    st.sidebar.title(" Navigation")
     page = st.sidebar.radio("Go to", [
-        "📊 Dataset Visualization",
-        "🧠 Model Training"
+        " Dataset Visualization",
+        " Model Training"
     ])
 
-    dataset_name = st.sidebar.selectbox("📂 Choose Dataset", ["Cora", "Citeseer", "PubMed"])
+    dataset_name = st.sidebar.selectbox("Choose Dataset", ["Cora", "Citeseer", "PubMed"])
     dataset, data = load_dataset(dataset_name)
 
-    if page == "📊 Dataset Visualization":
+    if page == " Dataset Visualization":
         dataset_visualization(dataset, data)
-    elif page == "🧠 Model Training":
+    elif page == " Model Training":
         model_training(dataset, data)
 
 if __name__ == "__main__":
